@@ -38,5 +38,29 @@ df = df.withColumn("is_holiday", when(date_format("pickup_datetime", "MM-dd") ==
 # Congestion surcharge varsa, yoğunluk var mı?
 df = df.withColumn("congestion_happening", when(col("congestion_surcharge") > 0, 1).otherwise(0))
 
+# Bahşiş oranı
+df = df.withColumn("tip_ratio", 
+                   when(col("fare_amount") > 0, col("tip_amount") / col("fare_amount")) \
+                   .otherwise(0.0))
+
+# Grup yolculuğu mu?
+df = df.withColumn("is_group_ride", (col("passenger_count") >= 2).cast("int"))
+
+# Uzak yolculuk mu?
+df = df.withColumn("is_long_trip", (col("trip_distance") >= 10).cast("int"))
+
+# PU-DO eşleşme kolonu
+df = df.withColumn("location_pair", concat_ws("-", col("PULocationID").cast("string"), col("DOLocationID").cast("string")))
+
+# Mil başına ücret
+df = df.withColumn("fare_per_mile", 
+                   when(col("trip_distance") > 0, col("fare_amount") / col("trip_distance")) \
+                   .otherwise(0.0))
+
 # İlk 10 satırı yazdır
-df.select("pickup_datetime", "hour", "is_night", "is_weekend", "speed_mph", "is_holiday", "congestion_happening").show(10)
+# df.select("pickup_datetime", "hour", "is_night", "is_weekend", "speed_mph", "is_holiday", "congestion_happening").show(10)
+
+output_path = "processed_output"  # bu klasör oluşacak
+df.write.option("header", True).mode("overwrite").csv(output_path)
+
+spark.stop()
