@@ -9,10 +9,10 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Veri yolu (örnek CSV yolu)
-data_path = "NYCTaxiDataset/data.csv"
+data_path = ""
 
 # Veriyi oku
-df = spark.read.option("header", "true").option("inferSchema", "true").csv(data_path)
+df = spark.read.parquet("clean_NYC_Taxi.parquet")
 
 # Zaman tipini dönüştür
 df = df.withColumn("pickup_datetime", to_timestamp("tpep_pickup_datetime")) \
@@ -61,6 +61,6 @@ df = df.withColumn("fare_per_mile",
 # df.select("pickup_datetime", "hour", "is_night", "is_weekend", "speed_mph", "is_holiday", "congestion_happening").show(10)
 
 output_path = "processed_output"  # bu klasör oluşacak
-df.write.option("header", True).mode("overwrite").csv(output_path)
+df.write.mode("overwrite").parquet("processed_output")
 
 spark.stop()
